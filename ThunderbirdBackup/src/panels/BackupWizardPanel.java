@@ -60,8 +60,10 @@ public class BackupWizardPanel extends WizardPanel
             int month = currentDate.getMonth() + 1;
             int year = currentDate.getYear() - 100;
             
-            File destinationFile = new File(_backupPath + "/Thunderbird_Backup_" + day + "_" + month + "_" + year);
+            File destinationFile = new File(_backupPath + "/Thunderbird_Backup_20" + year + "_" + month + "_" + day);
             destinationFile.mkdir();
+            _sourcePath = sourceFile.getPath();
+            _destinationPath = destinationFile.getPath();
             copyDirectories(sourceFile, destinationFile);
             
             // Update interface
@@ -78,6 +80,11 @@ public class BackupWizardPanel extends WizardPanel
     
     /** The status label. */
     private JLabel _statusLabel;
+    
+    /** The source path. */
+    private String _sourcePath;
+    /** The destination path. */
+    private String _destinationPath;
     
     /** Create the backup panel.
      * @param frame The owner frame.
@@ -121,12 +128,21 @@ public class BackupWizardPanel extends WizardPanel
         if (filesList.length == 0) return size;
         
         // Check each file at this level of the directories tree
-        for(int i = 0; i < filesList.length; i++)
+        for (int i = 0; i < filesList.length; i++)
         {
             if (filesList[i].isFile()) size += filesList[i].length();
             else size += getDirectorySize(filesList[i]);
         }
         return size;
+    }
+    
+    /** Convert a source path to a destination path by changing the path begining.
+     * @param sourcePath The path to convert.
+     * return A string where the beginning as been substituted to point to the destination directory.
+     */ 
+    private String convertToDestinationPath(String sourcePath)
+    {
+        return _destinationPath + sourcePath.substring(_sourcePath.length());
     }
     
     /** Copy a whole directories tree into another.
@@ -139,16 +155,13 @@ public class BackupWizardPanel extends WizardPanel
         File[] filesList = sourceDirectory.listFiles();
         if (filesList.length == 0) return;
         
-        String sourcePath = sourceDirectory.toString();
-        String destinationPath = destinationDirectory.toString();
-        
         for (int i = 0; i < filesList.length; i++)
         {
             File sourceFile = filesList[i];
             
             // Substitute source path by destination path
-            String currentPath = sourceFile.toString();
-            currentPath = currentPath.replaceFirst(sourcePath, destinationPath);
+            String currentPath = sourceFile.getPath();
+            currentPath = convertToDestinationPath(currentPath);
             
             if (sourceFile.isDirectory())
             {
